@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  proxmox-swap:
+    image: proxmox-swap:latest
+    replicas: 1
+    ports:
+      - published: 8000
+        target: 8000
+        protocol: tcp
+    secrets:
+      - pve_api_token_id
+      - pve_api_token_secret
+      - oidc_client_id
+      - oidc_client_secret
+      - session_secret
+    environment:
+      - PVE_HOST=${PVE_HOST}
+      - PVE_API_USER=${PVE_API_USER}
+      - AUTH_MODE=oidc
+      - PVE_API_TOKEN_ID_FILE=/run/secrets/pve_api_token_id
+      - PVE_API_TOKEN_SECRET_FILE=/run/secrets/pve_api_token_secret
+      - OIDC_CLIENT_ID_FILE=/run/secrets/oidc_client_id
+      - OIDC_CLIENT_SECRET_FILE=/run/secrets/oidc_client_secret
+      - SESSION_SECRET_FILE=/run/secrets/session_secret
+      - OIDC_ISSUER=${OIDC_ISSUER}
+      - OWNER_GROUPS=${OWNER_GROUPS}
+      - HOST_CT_ID=${HOST_CT_ID}
+      - GUEST_CT_ID=${GUEST_CT_ID}
+      - DEFAULT_TIMEOUT_SECONDS=${DEFAULT_TIMEOUT_SECONDS:-7200}
+      - MAX_SECONDS=${MAX_SECONDS:-28800}
+      - WARNING_SECONDS=${WARNING_SECONDS:-1800}
+      - FORCE_GRACE_SECONDS=${FORCE_GRACE_SECONDS:-600}
+      - WATCHDOG_INTERVAL_SECONDS=${WATCHDOG_INTERVAL_SECONDS:-30}
+    volumes:
+      - state_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - proxy
+
+secrets:
+  pve_api_token_id:
+    external: true
+  pve_api_token_secret:
+    external: true
+  oidc_client_id:
+    external: true
+  oidc_client_secret:
+    external: true
+  session_secret:
+    external: true
+
+volumes:
+  state_data:
+
+networks:
+  proxy:
+    external: true

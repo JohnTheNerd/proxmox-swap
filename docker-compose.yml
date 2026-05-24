@@ -1,0 +1,43 @@
+services:
+  proxmox-swap:
+    build: .
+    env_file: .env
+    volumes:
+      - state_data:/data
+    environment:
+      - AUTH_MODE=header
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  proxy:
+    image: caddy
+    ports:
+      - "5001:5001"
+      - "5002:5002"
+    configs:
+      - source: Caddyfile
+        target: /etc/caddy/Caddyfile
+    depends_on:
+      proxmox-swap:
+        condition: service_healthy
+
+volumes:
+  state_data:
+
+configs:
+  Caddyfile:
+    content: |
+      :5001 {
+          reverse_proxy proxmox-swap:8000 {
+              header_up X-Auth-Request-Name "Guest Name"
+          }
+      }
+      :5002 {
+          reverse_proxy proxmox-swap:8000 {
+              header_up X-Auth-Request-Name "Owner Name"
+          }
+      }
