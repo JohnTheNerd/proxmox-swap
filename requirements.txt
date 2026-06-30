@@ -13,7 +13,7 @@ httpcore==1.0.9
 httpx==0.28.1
 idna==3.16
 itsdangerous==2.2.0
-joserfc==1.6.5
+joserfc==1.6.7
 pycparser==3.0
 pydantic==2.13.4
 pydantic_core==2.46.4
